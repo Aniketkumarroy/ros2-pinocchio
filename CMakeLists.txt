@@ -13,15 +13,23 @@ find_package(ament_cmake REQUIRED)
 
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
+find_package(pinocchio REQUIRED)
+find_package(Eigen3 REQUIRED)
+
+include_directories(${EIGEN3_INCLUDE_DIR})
 
 add_executable(cpp_pub src/cpp_publisher.cpp)
 ament_target_dependencies(cpp_pub rclcpp std_msgs)
 add_executable(cpp_sub src/cpp_subscriber.cpp)
 ament_target_dependencies(cpp_sub rclcpp std_msgs)
 
+add_executable(pinocchio_model src/pinocchio_model.cpp)
+ament_target_dependencies(pino pinocchio rclcpp std_msgs)
+
 install(TARGETS
   cpp_pub
   cpp_sub
+  pinocchio_model
   DESTINATION lib/${PROJECT_NAME})
 install(PROGRAMS
   scripts/py_publisher.py
