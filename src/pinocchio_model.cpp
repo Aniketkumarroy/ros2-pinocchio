@@ -21,7 +21,7 @@ public:
   }
 
 private:
-  void loadPinocchioModel(){
+  void loadPinocchioModelFromXML(const std_msgs::msg::String &msg) {
     pinocchio::urdf::buildModelFromXML(msg.data, model_);
     pinocchio::urdf::buildGeom(model_, msg.data, pinocchio::VISUAL,
                                visual_model_);
@@ -30,8 +30,8 @@ private:
   }
   void robotDescSubs(const std_msgs::msg::String &msg) {
     if (!is_loaded_) {
-      loadPinocchioModel;
-       collision_model_.addAllCollisionPairs();
+      loadPinocchioModelFromXML(msg);
+      collision_model_.addAllCollisionPairs();
       is_loaded_ = true;
     }
   }
