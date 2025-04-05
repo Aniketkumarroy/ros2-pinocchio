@@ -27,6 +27,8 @@ public:
 
   uint32_t getNumOfFrames() { return static_cast<uint32_t>(model_.nframes); }
 
+  uint32_t getNumOfDOF() { return model_.nv; }
+
   const std::unordered_map<pinocchio::FrameIndex,
                            Eigen::Transform<Scalar, 3, Eigen::Isometry>> &
   getTransformsOfFrames() {

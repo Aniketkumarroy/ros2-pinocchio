@@ -46,8 +46,16 @@ private:
   }
 
   void timer_callback() {
-    robot_dyn_.applyForwardKinematics();
-    robot_dyn_.updateTransform();
+    // robot_dyn_.applyForwardKinematics();
+    // robot_dyn_.updateTransform();
+
+    auto _n_frames = robot_dyn_.getNumOfFrames();
+    Eigen::Matrix<double, 6, Eigen::Dynamic, Eigen::ColMajor> J =
+        Eigen::Matrix<double, 6, Eigen::Dynamic, Eigen::ColMajor>::Zero(
+            6, robot_dyn_.getNumOfDOF());
+    for (uint32_t i = 1; i < _n_frames; i++) {
+      robot_dyn_.computeJacobian(i, J, Sthira::Sthira::FRAME);
+    }
   }
 
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr robot_des_sub_;
