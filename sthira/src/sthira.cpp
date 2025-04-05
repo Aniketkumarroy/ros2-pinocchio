@@ -26,6 +26,8 @@ void Sthira::loadPinocchioModelFromXML(const std::string &xml_stream) {
                              visual_model_);
 
   collision_model_.addAllCollisionPairs();
+  removeAdjacentCollisionPairs();
+
   std::cout << "[RobotDescripionSubscriber::loadPinocchioModelFromXML] "
                "Pinocchio collision model loaded sucessfully"
             << "\n";
@@ -183,5 +185,49 @@ void Sthira::computeJacobian(
     pinocchio::computeFrameJacobian(model_, model_data_, q_joints, index, J);
   else if (m == Sthira::JOINT)
     pinocchio::computeJointJacobian(model_, model_data_, q_joints, index, J);
+}
+
+void Sthira::removeAdjacentCollisionPairs() {
+  std::vector<pinocchio::CollisionPair> _filtered_pairs;
+
+  for (const auto &_pair : collision_model_.collisionPairs) {
+    const auto &_obj1 = collision_model_.geometryObjects[_pair.first];
+    const auto &_obj2 = collision_model_.geometryObjects[_pair.second];
+
+    // Check adjacency using parent joints
+    pinocchio::JointIndex _joint1 = _obj1.parentJoint;
+    pinocchio::JointIndex _joint2 = _obj2.parentJoint;
+
+    if (model_.parents[_joint1] == _joint2 || model_.parents[_joint2] == _joint1) {
+      // Skip adjacent pairs
+      continue;
+    }
+
+    _filtered_pairs.push_back(_pair);
+  }
+
+  collision_model_.collisionPairs = _filtered_pairs;
+}
+
+void Sthira::computeCollisions(
+    const Eigen::Matrix<Scalar, Eigen::Dynamic, 1> &q_joints,
+    bool stop_at_first_collision) {
+
+  // Compute the forward kinematics, update the geometry placements and calls
+  // computeCollision for every active pairs of GeometryData.
+  pinocchio::computeCollisions(model_, model_data_, collision_model_,
+                               collision_data_, q_joints,
+                               stop_at_first_collision);
+
+  for (uint32_t i = 0; i < collision_model_.collisionPairs.size(); ++i) {
+    const pinocchio::CollisionPair &_cp = collision_model_.collisionPairs[i];
+    const hpp::fcl::CollisionResult &_cr = collision_data_.collisionResults[i];
+
+    if (_cr.isCollision()) {
+      std::string link1 = model_.frames[_cp.first].name;
+      std::string link2 = model_.frames[_cp.second].name;
+      std::cerr << "link: " << link1 << " is colliding with " << link2 << "\n";
+    }
+  }
 }
 } // namespace Sthira

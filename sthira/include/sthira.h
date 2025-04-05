@@ -3,6 +3,7 @@
 #include <pinocchio/algorithm/jacobian.hpp>
 #include <pinocchio/algorithm/joint-configuration.hpp>
 // #include "pinocchio/collision/broadphase.hpp"
+#include <pinocchio/collision/collision.hpp>
 #include <pinocchio/parsers/srdf.hpp>
 #include <pinocchio/parsers/urdf.hpp>
 
@@ -58,6 +59,16 @@ public:
   void computeJacobian(const uint32_t index, pinocchio::Data::Matrix6x &J,
                        const Type m) {
     computeJacobian(this->q_joints_, index, J, m);
+  }
+
+  void removeAdjacentCollisionPairs();
+
+  void
+  computeCollisions(const Eigen::Matrix<Scalar, Eigen::Dynamic, 1> &q_joints,
+                    bool stop_at_first_collision = false);
+
+  void computeCollisions(bool stop_at_first_collision = false) {
+    computeCollisions(this->q_joints_, stop_at_first_collision);
   }
 
 private:
