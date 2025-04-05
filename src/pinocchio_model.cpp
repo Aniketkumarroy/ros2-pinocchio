@@ -14,7 +14,7 @@
 class RobotDescripionSubscriber : public rclcpp::Node {
 public:
   RobotDescripionSubscriber() : Node("robot_description_subscriber") {
-    robot_des_ = this->create_subscription<std_msgs::msg::String>(
+    robot_des_topic_ = this->create_subscription<std_msgs::msg::String>(
         "/robot_description", 10,
         std::bind(&RobotDescripionSubscriber::robotDescSubs, this,
                   std::placeholders::_1));
@@ -35,7 +35,7 @@ private:
       is_loaded_ = true;
     }
   }
-  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr robot_des_;
+  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr robot_des_topic_;
   bool is_loaded_ = false;
   pinocchio::Model model_;
   pinocchio::GeometryModel visual_model_;
