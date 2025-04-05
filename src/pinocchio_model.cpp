@@ -20,9 +20,14 @@ using Scalar = double; // if we switch it to other type then we might need to
 class RobotDescripionSubscriber : public rclcpp::Node {
 public:
   RobotDescripionSubscriber() : Node("robot_description_subscriber") {
-    robot_des_topic_ = this->create_subscription<std_msgs::msg::String>(
+    robot_des_sub_ = this->create_subscription<std_msgs::msg::String>(
         "/robot_description", 10,
-        std::bind(&RobotDescripionSubscriber::robotDescSubs, this,
+        std::bind(&RobotDescripionSubscriber::robotDescSubCallback, this,
+                  std::placeholders::_1));
+
+    joint_state_sub_ = this->create_subscription<sensor_msgs::msg::JointState>(
+        "/joint_states", 10,
+        std::bind(&RobotDescripionSubscriber::jointStateSubCallback, this,
                   std::placeholders::_1));
   }
 
@@ -78,10 +83,11 @@ private:
 
   void initializeModelData() {
     if (is_loaded_ == false || model_.njoints == 0) {
-      RCLCPP_INFO(this->get_logger(),
-                  "[RobotDescripionSubscriber::initializeModelData] model is not "
-                  "loaded, no of joints is %d",
-                  model_.njoints);
+      RCLCPP_INFO(
+          this->get_logger(),
+          "[RobotDescripionSubscriber::initializeModelData] model is not "
+          "loaded, no of joints is %d",
+          model_.njoints);
       return;
     }
 
@@ -133,13 +139,45 @@ private:
     }
   }
 
-  void robotDescSubs(const std_msgs::msg::String &msg) {
+  void robotDescSubCallback(const std_msgs::msg::String &msg) {
     if (!is_loaded_) {
       loadPinocchioModelFromXML(msg);
     }
   }
 
-  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr robot_des_topic_;
+  void jointStateSubCallback(const sensor_msgs::msg::JointState &msg) {
+    if (is_loaded_ == false || model_.njoints == 0) {
+      RCLCPP_INFO(this->get_logger(),
+                  "[RobotDescripionSubscriber::jointStateSubCallback] model is "
+                  "not loaded, no of joints is %d",
+                  model_.njoints);
+      return;
+    }
+
+    uint32_t _n_joints = msg.name.size();
+    assert(_n_joints == joint_id_map_.size());
+    Eigen::Matrix<Scalar, Eigen::Dynamic, 1> _q_joints;
+    _q_joints.setZero(_n_joints);
+    for (uint32_t i = 0; i < _n_joints; i++) {
+      const auto &_joint_name = msg.name[i];
+      const auto _it = joint_id_map_.find(_joint_name);
+      if (_it == joint_id_map_.end()) {
+        RCLCPP_INFO(this->get_logger(),
+                    "[RobotDescripionSubscriber::jointStateSubCallback] joint "
+                    "%s is not found in joint_id_map_",
+                    _joint_name.c_str());
+        return;
+      }
+      // -1 since in pinocchio 0 is universe
+      _q_joints[_it->second - 1] = msg.position[i];
+    }
+
+    forwardKinematics(_q_joints);
+  }
+
+  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr robot_des_sub_;
+  rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr
+      joint_state_sub_;
   bool is_loaded_ = false;
   pinocchio::Model model_;
   pinocchio::GeometryModel visual_model_;
