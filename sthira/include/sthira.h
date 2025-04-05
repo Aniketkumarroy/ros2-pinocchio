@@ -27,6 +27,18 @@ public:
 
   uint32_t getNumOfFrames() { return static_cast<uint32_t>(model_.nframes); }
 
+  const std::unordered_map<pinocchio::FrameIndex,
+                           Eigen::Transform<Scalar, 3, Eigen::Isometry>> &
+  getTransformsOfFrames() {
+    return frame_transform_map_;
+  }
+
+  const std::unordered_map<pinocchio::JointIndex,
+                           Eigen::Transform<Scalar, 3, Eigen::Isometry>> &
+  getTransformsOfJoints() {
+    return joint_transform_map_;
+  }
+
   void applyForwardKinematics(
       const Eigen::Matrix<Scalar, Eigen::Dynamic, 1> &q_joints);
 
