@@ -15,6 +15,8 @@ using Scalar = double; // if we switch it to other type then we might need to
 
 class Sthira {
 public:
+  enum Type { JOINT, FRAME };
+
   void loadPinocchioModelFromXML(const std::string &xml_stream);
 
   bool isModelLoaded() { return is_loaded_; }
@@ -28,6 +30,15 @@ public:
 
   void
   setQJoints(const std::unordered_map<std::string, Scalar> &joint_positions);
+
+  void computeJacobian(const Eigen::Matrix<Scalar, Eigen::Dynamic, 1> &q_joints,
+                       const uint32_t index, pinocchio::Data::Matrix6x &J,
+                       const Type m);
+
+  void computeJacobian(const uint32_t index, pinocchio::Data::Matrix6x &J,
+                       const Type m) {
+    computeJacobian(this->q_joints_, index, J, m);
+  }
 
 private:
   void initializeModelData();
@@ -44,7 +55,7 @@ private:
   std::unordered_map<std::string, Scalar> joint_position_map_;
   std::unordered_map<pinocchio::JointIndex,
                      Eigen::Transform<Scalar, 3, Eigen::Isometry>>
-      joints_transform_map_;
+      joint_transform_map_;
   std::unordered_map<pinocchio::FrameIndex,
                      Eigen::Transform<Scalar, 3, Eigen::Isometry>>
       frame_transform_map_;

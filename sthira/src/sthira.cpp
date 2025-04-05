@@ -150,4 +150,35 @@ void Sthira::setQJoints(
     }
   }
 }
+
+void Sthira::computeJacobian(
+    const Eigen::Matrix<Scalar, Eigen::Dynamic, 1> &q_joints,
+    const uint32_t index, pinocchio::Data::Matrix6x &J, const Sthira::Type m) {
+  if (is_loaded_ == false || model_.njoints <= 1) {
+    std::cout << "[RobotDescripionSubscriber::updateTransform] model is not "
+                 "loaded, no of joints is "
+              << model_.njoints << "\n";
+    return;
+  }
+  uint32_t _N;
+  if (m == Sthira::FRAME)
+    _N = static_cast<uint32_t>(model_.nframes);
+  else if (m == Sthira::JOINT)
+    _N = static_cast<uint32_t>(model_.njoints);
+  else {
+    std::cout << "wrong value for m provided, possible values are "
+                 "Sthira::FRAME or Sthira::JOINT"
+              << "\n";
+    return;
+  }
+  if (index >= _N) {
+    std::cout << "[RobotDescripionSubscriber::computeJointJacobian] index "
+              << index << " is out of bounds" << "\n";
+    return;
+  }
+  if (m == Sthira::FRAME)
+    pinocchio::computeFrameJacobian(model_, model_data_, q_joints, index, J);
+  else if (m == Sthira::JOINT)
+    pinocchio::computeJointJacobian(model_, model_data_, q_joints, index, J);
+}
 } // namespace Sthira
