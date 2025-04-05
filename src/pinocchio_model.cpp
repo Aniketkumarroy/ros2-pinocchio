@@ -174,10 +174,10 @@ private:
   pinocchio::GeometryData visual_data_;
   pinocchio::GeometryData collision_data_;
 
-  std::unordered_map<std::string, pinocchio::JointIndex> joint_id_map_;
+  std::unordered_map<std::string, Scalar> joint_position_map_;
   std::unordered_map<pinocchio::JointIndex,
                      Eigen::Transform<Scalar, 3, Eigen::Isometry>>
-      joints_transform_;
+      joints_transform_map_;
 };
 
 int main(int argc, char *argv[]) {
