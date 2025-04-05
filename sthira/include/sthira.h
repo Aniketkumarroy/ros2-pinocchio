@@ -19,7 +19,7 @@ public:
 
   void loadPinocchioModelFromXML(const std::string &xml_stream);
 
-  bool isModelLoaded() { return is_loaded_; }
+  bool isModelLoaded() { return (is_loaded_ && model_.njoints >= 1); }
 
   void setModelLoadStatus(bool status) { is_loaded_ = status; }
 

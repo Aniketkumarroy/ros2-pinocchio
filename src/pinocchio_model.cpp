@@ -1,22 +1,7 @@
-#include <filesystem>
-
-#include <ament_index_cpp/get_package_share_directory.hpp>
-#include <pinocchio/algorithm/frames.hpp>
-#include <pinocchio/algorithm/geometry.hpp>
-#include <pinocchio/algorithm/jacobian.hpp>
-#include <pinocchio/algorithm/joint-configuration.hpp>
-// #include "pinocchio/collision/broadphase.hpp"
-#include <pinocchio/parsers/srdf.hpp>
-#include <pinocchio/parsers/urdf.hpp>
-#include <unordered_map>
-
+#include "sthira.h"
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/joint_state.hpp>
 #include <std_msgs/msg/string.hpp>
-#include <string>
-
-using Scalar = double; // if we switch it to other type then we might need to
-                       // adjust datatype of pinocchio accordingly
 
 class RobotDescripionSubscriber : public rclcpp::Node {
 public:
