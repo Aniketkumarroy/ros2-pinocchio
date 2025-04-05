@@ -13,6 +13,7 @@ find_package(ament_cmake REQUIRED)
 
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
+find_package(sensor_msgs REQUIRED)
 find_package(pinocchio REQUIRED)
 find_package(Eigen3 REQUIRED)
 
@@ -24,7 +25,7 @@ add_executable(cpp_sub src/cpp_subscriber.cpp)
 ament_target_dependencies(cpp_sub rclcpp std_msgs)
 
 add_executable(pinocchio_model src/pinocchio_model.cpp)
-ament_target_dependencies(pinocchio_model pinocchio rclcpp std_msgs)
+ament_target_dependencies(pinocchio_model pinocchio rclcpp std_msgs sensor_msgs)
 
 install(TARGETS
   cpp_pub
