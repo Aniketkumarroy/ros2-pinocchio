@@ -71,6 +71,8 @@ public:
     computeCollisions(this->q_joints_, stop_at_first_collision);
   }
 
+  bool areColliding(const std::string &frame_1, const std::string &frame_2);
+
 private:
   void initializeModelData();
 

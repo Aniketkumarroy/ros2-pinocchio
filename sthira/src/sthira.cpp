@@ -230,4 +230,49 @@ void Sthira::computeCollisions(
     }
   }
 }
+
+bool Sthira::areColliding(const std::string &frame_1,
+                          const std::string &frame_2) {
+
+  pinocchio::FrameIndex _idxA = model_.getFrameId(frame_1);
+  pinocchio::FrameIndex _idxB = model_.getFrameId(frame_2);
+  int _geomIdA = -1, _geomIdB = -1;
+
+  for (size_t i = 0; i < collision_model_.geometryObjects.size(); ++i) {
+    const auto &_obj = collision_model_.geometryObjects[i];
+    if (_geomIdA == -1 && _obj.parentFrame == _idxA)
+      _geomIdA = static_cast<int>(i);
+    if (_geomIdB == -1 && _obj.parentFrame == _idxB)
+      _geomIdB = static_cast<int>(i);
+
+    if (_geomIdA != -1 && _geomIdB != -1)
+      break;
+  }
+
+  if (_geomIdA == -1 || _geomIdB == -1)
+    return false;
+
+  // for disabling compiler warnings
+  uint32_t _idA = static_cast<uint32_t>(_geomIdA);
+  uint32_t _idB = static_cast<uint32_t>(_geomIdB);
+
+  int _pairIndex = -1;
+  for (size_t i = 0; i < collision_model_.collisionPairs.size(); ++i) {
+    const auto &_pair = collision_model_.collisionPairs[i];
+    if ((_pair.first == _idA && _pair.second == _idB) ||
+        (_pair.first == _idB && _pair.second == _idA)) {
+      _pairIndex = static_cast<int>(i);
+      break;
+    }
+  }
+
+  if (_pairIndex == -1)
+    return false;
+
+  // This computes collision for the given pair
+  bool collision = pinocchio::computeCollision(collision_model_,
+                                               collision_data_, _pairIndex);
+  return collision;
+}
+
 } // namespace Sthira
