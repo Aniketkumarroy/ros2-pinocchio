@@ -33,6 +33,9 @@ void Sthira::loadPinocchioModelFromXML(const std::string &xml_stream) {
 
   q_joints_.setZero(model_.nq);
 
+  frame_transform_map_.clear();
+  joint_transform_map_.clear();
+
   initializeModelData();
 }
 
@@ -56,10 +59,9 @@ void Sthira::initializeModelData() {
 void Sthira::applyForwardKinematics(
     const Eigen::Matrix<Scalar, Eigen::Dynamic, 1> &q_joints) {
   if (is_loaded_ == false || model_.njoints <= 1) {
-    RCLCPP_INFO(this->get_logger(),
-                "[RobotDescripionSubscriber::forwardKinematics] model is not "
-                "loaded, no of joints is %d",
-                model_.njoints);
+    std::cout << "[RobotDescripionSubscriber::forwardKinematics] model is not "
+                 "loaded, no of joints is "
+              << model_.njoints << "\n";
     return;
   }
 
@@ -87,8 +89,8 @@ void Sthira::updateTransform() {
   uint32_t _n_joints = model_.njoints;
   for (pinocchio::JointIndex i = 1; i < _n_joints; ++i) {
     pinocchio::SE3 _joint_transform = model_data_.oMi[i];
-    joints_transform_map_[i].linear() = _joint_transform.rotation();
-    joints_transform_map_[i].translation() = _joint_transform.translation();
+    joint_transform_map_[i].linear() = _joint_transform.rotation();
+    joint_transform_map_[i].translation() = _joint_transform.translation();
   }
 
   uint32_t _n_frames = model_.nframes;
@@ -96,6 +98,56 @@ void Sthira::updateTransform() {
     const pinocchio::SE3 &_frame_transform = model_data_.oMf[i];
     frame_transform_map_[i].linear() = _frame_transform.rotation();
     frame_transform_map_[i].translation() = _frame_transform.translation();
+  }
+}
+
+void Sthira::setQJoints(
+    const std::unordered_map<std::string, Scalar> &joint_positions) {
+  if (is_loaded_ == false || model_.njoints <= 1) {
+    std::cout << "[RobotDescripionSubscriber::jointStateSubCallback] model is "
+                 "not loaded, no of joints is "
+              << model_.njoints << "\n";
+    return;
+  }
+  if (static_cast<uint32_t>(model_.njoints - 1) !=
+      static_cast<uint32_t>(joint_position_map_.size())) {
+    std::cout << "[RobotDescripionSubscriber::jointStateSubCallback] Mismatch "
+                 "in joint counts: model_.njoints - 1 ("
+              << model_.njoints - 1
+              << ") != "
+                 "joint_position size ("
+              << joint_positions.size() << ")" << "\n";
+
+    return;
+  }
+  uint32_t _n_joints = model_.njoints;
+  for (pinocchio::JointIndex i = 1; i < _n_joints; ++i) {
+    const auto &_joint = model_.joints[i];
+    const std::string &_joint_name = model_.names[i];
+
+    const auto _it = joint_positions.find(_joint_name);
+    if (_it == joint_positions.end()) {
+      std::cout << "Joint" << _joint_name << " not found in joint_positions"
+                << "\n";
+      return;
+    }
+    auto idx_q = _joint.idx_q(); // Where to insert in q
+    auto nq = _joint.nq();       // How many entries for this joint
+
+    switch (nq) {
+    case 1:
+      q_joints_[idx_q + 0] = _it->second;
+      break;
+
+    case 2:
+      q_joints_[idx_q + 0] = std::cos(_it->second / 2.0);
+      q_joints_[idx_q + 1] = std::sin(_it->second / 2.0);
+      break;
+    default:
+      std::cout << "Joint " << _joint_name << " has unsupported nq = " << nq
+                << "; skipping" << "\n";
+      break;
+    }
   }
 }
 } // namespace Sthira

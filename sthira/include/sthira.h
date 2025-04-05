@@ -26,6 +26,9 @@ public:
 
   void updateTransform();
 
+  void
+  setQJoints(const std::unordered_map<std::string, Scalar> &joint_positions);
+
 private:
   void initializeModelData();
 
