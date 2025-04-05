@@ -143,23 +143,58 @@ private:
     }
   }
 
-    uint32_t _n_joints = msg.name.size();
-    assert(_n_joints == joint_id_map_.size());
+  void applyFKFromJointPosition() {
+    if (is_loaded_ == false || model_.njoints <= 1) {
+      RCLCPP_INFO(this->get_logger(),
+                  "[RobotDescripionSubscriber::jointStateSubCallback] model is "
+                  "not loaded, no of joints is %d",
+                  model_.njoints);
+      return;
+    }
+    if ((model_.njoints - 1) != joint_position_map_.size()) {
+      RCLCPP_ERROR(
+          this->get_logger(),
+          "[RobotDescripionSubscriber::jointStateSubCallback] Mismatch "
+          "in joint counts: model_.njoints - 1 (%d) != "
+          "joint_position_map size (%ld)",
+          model_.njoints - 1, joint_position_map_.size());
+      return;
+    }
+
     Eigen::Matrix<Scalar, Eigen::Dynamic, 1> _q_joints;
-    _q_joints.setZero(_n_joints);
-    for (uint32_t i = 0; i < _n_joints; i++) {
-      const auto &_joint_name = msg.name[i];
-      const auto _it = joint_id_map_.find(_joint_name);
-      if (_it == joint_id_map_.end()) {
-        RCLCPP_INFO(this->get_logger(),
-                    "[RobotDescripionSubscriber::jointStateSubCallback] joint "
-                    "%s is not found in joint_id_map_",
+    _q_joints.setZero(model_.nq);
+    uint32_t _n_joints = model_.njoints;
+    for (pinocchio::JointIndex i = 1; i < _n_joints; ++i) {
+      const auto &_joint = model_.joints[i];
+      const std::string &_joint_name = model_.names[i];
+
+      const auto _it = joint_position_map_.find(_joint_name);
+      if (_it == joint_position_map_.end()) {
+        RCLCPP_WARN(this->get_logger(),
+                    "Joint %s not found in joint_position_map_",
                     _joint_name.c_str());
         return;
       }
-      // -1 since in pinocchio 0 is universe
-      _q_joints[_it->second - 1] = msg.position[i];
+      auto idx_q = _joint.idx_q(); // Where to insert in q
+      auto nq = _joint.nq();       // How many entries for this joint
+
+      switch (nq) {
+      case 1:
+        _q_joints[idx_q + 0] = _it->second;
+        break;
+
+      case 2:
+        _q_joints[idx_q + 0] = std::cos(_it->second / 2.0);
+        _q_joints[idx_q + 1] = std::sin(_it->second / 2.0);
+        break;
+      default:
+        RCLCPP_WARN(this->get_logger(),
+                    "Joint %s has unsupported nq = %d; skipping",
+                    _joint_name.c_str(), nq);
+        break;
+      }
     }
+    forwardKinematics(_q_joints);
   }
 
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr robot_des_sub_;
