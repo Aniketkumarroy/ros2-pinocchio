@@ -62,7 +62,8 @@ private:
       return;
     }
     joint_id_map_.clear();
-    for (pinocchio::JointIndex i = 1; i < model_.njoints; ++i) { // 0 universe
+    pinocchio::JointIndex _n_joints = model_.njoints;
+    for (pinocchio::JointIndex i = 1; i < _n_joints; ++i) { // 0 universe
       std::cout << "Joint[" << i << "] : " << model_.names[i] << std::endl;
       joint_id_map_[model_.names[i]] = i;
     }
