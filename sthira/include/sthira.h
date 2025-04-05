@@ -17,6 +17,15 @@ class Sthira {
 public:
   void loadPinocchioModelFromXML(const std::string &xml_stream);
 
+  bool isModelLoaded() { return is_loaded_; }
+
+  void setModelLoadStatus(bool status) { is_loaded_ = status; }
+
+  void applyForwardKinematics(
+      const Eigen::Matrix<Scalar, Eigen::Dynamic, 1> &q_joints);
+
+  void updateTransform();
+
 private:
   void initializeModelData();
 
