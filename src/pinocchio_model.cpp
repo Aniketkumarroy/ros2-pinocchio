@@ -151,7 +151,8 @@ private:
                   model_.njoints);
       return;
     }
-    if ((model_.njoints - 1) != joint_position_map_.size()) {
+    if (static_cast<uint32_t>(model_.njoints - 1) !=
+        static_cast<uint32_t>(joint_position_map_.size())) {
       RCLCPP_ERROR(
           this->get_logger(),
           "[RobotDescripionSubscriber::jointStateSubCallback] Mismatch "
