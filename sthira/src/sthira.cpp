@@ -110,7 +110,7 @@ void Sthira::setQJoints(
     return;
   }
   if (static_cast<uint32_t>(model_.njoints - 1) !=
-      static_cast<uint32_t>(joint_position_map_.size())) {
+      static_cast<uint32_t>(joint_positions.size())) {
     std::cout << "[RobotDescripionSubscriber::jointStateSubCallback] Mismatch "
                  "in joint counts: model_.njoints - 1 ("
               << model_.njoints - 1
