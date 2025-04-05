@@ -124,6 +124,13 @@ private:
       joints_transform_map_[i].linear() = _joint_transform.rotation();
       joints_transform_map_[i].translation() = _joint_transform.translation();
     }
+
+    uint32_t _n_frames = model_.nframes;
+    for (pinocchio::FrameIndex i = 1; i < _n_frames; ++i) {
+      const pinocchio::SE3 &_frame_transform = model_data_.oMf[i];
+      frame_transform_map_[i].linear() = _frame_transform.rotation();
+      frame_transform_map_[i].translation() = _frame_transform.translation();
+    }
   }
 
   void robotDescSubCallback(const std_msgs::msg::String &msg) {
@@ -218,6 +225,9 @@ private:
   std::unordered_map<pinocchio::JointIndex,
                      Eigen::Transform<Scalar, 3, Eigen::Isometry>>
       joints_transform_map_;
+  std::unordered_map<pinocchio::FrameIndex,
+                     Eigen::Transform<Scalar, 3, Eigen::Isometry>>
+      frame_transform_map_;
 };
 
 int main(int argc, char *argv[]) {
