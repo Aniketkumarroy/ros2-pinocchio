@@ -24,7 +24,7 @@ add_executable(cpp_sub src/cpp_subscriber.cpp)
 ament_target_dependencies(cpp_sub rclcpp std_msgs)
 
 add_executable(pinocchio_model src/pinocchio_model.cpp)
-ament_target_dependencies(pino pinocchio rclcpp std_msgs)
+ament_target_dependencies(pinocchio_model pinocchio rclcpp std_msgs)
 
 install(TARGETS
   cpp_pub
