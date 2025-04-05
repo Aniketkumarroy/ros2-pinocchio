@@ -103,6 +103,9 @@ private:
                                         visual_data_);
 
     updateTransform();
+    RCLCPP_INFO(this->get_logger(),
+                "[RobotDescripionSubscriber::forwardKinematics] "
+                "sucessfully did forward kinematic and updated transform");
   }
 
   void updateTransform() {
@@ -141,6 +144,7 @@ private:
     for (uint32_t i = 0; i < _n_joints; i++) {
       joint_position_map_[msg.name[i]] = msg.position[i];
     }
+    applyFKFromJointPosition();
   }
 
   void applyFKFromJointPosition() {
