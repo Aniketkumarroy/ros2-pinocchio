@@ -11,6 +11,7 @@
 #include <unordered_map>
 
 #include <rclcpp/rclcpp.hpp>
+#include <sensor_msgs/msg/joint_state.hpp>
 #include <std_msgs/msg/string.hpp>
 #include <string>
 
@@ -66,7 +67,7 @@ private:
   }
 
   void findJointIds() {
-    if (is_loaded_ == false || model_.njoints == 0) {
+    if (is_loaded_ == false || model_.njoints <= 1) {
       RCLCPP_INFO(this->get_logger(),
                   "[RobotDescripionSubscriber::findJointIds] model is not "
                   "loaded, no of joints is %d",
@@ -82,7 +83,7 @@ private:
   }
 
   void initializeModelData() {
-    if (is_loaded_ == false || model_.njoints == 0) {
+    if (is_loaded_ == false || model_.njoints <= 1) {
       RCLCPP_INFO(
           this->get_logger(),
           "[RobotDescripionSubscriber::initializeModelData] model is not "
@@ -103,7 +104,7 @@ private:
   void
   forwardKinematics(const Eigen::Matrix<Scalar, Eigen::Dynamic, 1> &q_joints) {
 
-    if (is_loaded_ == false || model_.njoints == 0) {
+    if (is_loaded_ == false || model_.njoints <= 1) {
       RCLCPP_INFO(this->get_logger(),
                   "[RobotDescripionSubscriber::forwardKinematics] model is not "
                   "loaded, no of joints is %d",
@@ -123,7 +124,7 @@ private:
 
   void updateTransform() {
 
-    if (is_loaded_ == false || model_.njoints == 0) {
+    if (is_loaded_ == false || model_.njoints <= 1) {
       RCLCPP_INFO(this->get_logger(),
                   "[RobotDescripionSubscriber::updateTransform] model is not "
                   "loaded, no of joints is %d",
@@ -146,7 +147,7 @@ private:
   }
 
   void jointStateSubCallback(const sensor_msgs::msg::JointState &msg) {
-    if (is_loaded_ == false || model_.njoints == 0) {
+    if (is_loaded_ == false || model_.njoints <= 1) {
       RCLCPP_INFO(this->get_logger(),
                   "[RobotDescripionSubscriber::jointStateSubCallback] model is "
                   "not loaded, no of joints is %d",
