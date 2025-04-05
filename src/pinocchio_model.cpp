@@ -7,12 +7,12 @@ class RobotDescripionSubscriber : public rclcpp::Node {
 public:
   RobotDescripionSubscriber() : Node("robot_description_subscriber") {
     robot_des_sub_ = this->create_subscription<std_msgs::msg::String>(
-        "/robot_description", 10,
+        robot_des_topic_, 10,
         std::bind(&RobotDescripionSubscriber::robotDescSubCallback, this,
                   std::placeholders::_1));
 
     joint_state_sub_ = this->create_subscription<sensor_msgs::msg::JointState>(
-        "/joint_states", 10,
+        joint_states_topic_, 10,
         std::bind(&RobotDescripionSubscriber::jointStateSubCallback, this,
                   std::placeholders::_1));
   }
@@ -239,24 +239,10 @@ private:
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr robot_des_sub_;
   rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr
       joint_state_sub_;
-  bool is_loaded_ = false;
-  pinocchio::Model model_;
-  pinocchio::GeometryModel visual_model_;
-  pinocchio::GeometryModel collision_model_;
+  const std::string robot_des_topic_ = "/robot_description";
+  const std::string joint_states_topic_ = "/joint_states";
 
-  pinocchio::Data model_data_;
-  pinocchio::GeometryData visual_data_;
-  pinocchio::GeometryData collision_data_;
-
-  std::unordered_map<std::string, Scalar> joint_position_map_;
-  std::unordered_map<pinocchio::JointIndex,
-                     Eigen::Transform<Scalar, 3, Eigen::Isometry>>
-      joints_transform_map_;
-  std::unordered_map<pinocchio::FrameIndex,
-                     Eigen::Transform<Scalar, 3, Eigen::Isometry>>
-      frame_transform_map_;
-
-  Eigen::Matrix<Scalar, Eigen::Dynamic, 1> q_joints_;
+  Sthira::Sthira robot_dyn_;
 };
 
 int main(int argc, char *argv[]) {
