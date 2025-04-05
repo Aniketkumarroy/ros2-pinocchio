@@ -6,7 +6,7 @@
 #include <pinocchio/parsers/srdf.hpp>
 #include <pinocchio/parsers/urdf.hpp>
 
-#include<iostream>
+#include <iostream>
 
 namespace Sthira {
 
@@ -22,6 +22,10 @@ public:
   bool isModelLoaded() { return (is_loaded_ && model_.njoints >= 1); }
 
   void setModelLoadStatus(bool status) { is_loaded_ = status; }
+
+  uint32_t getNumOfJoints() { return static_cast<uint32_t>(model_.njoints); }
+
+  uint32_t getNumOfFrames() { return static_cast<uint32_t>(model_.nframes); }
 
   void applyForwardKinematics(
       const Eigen::Matrix<Scalar, Eigen::Dynamic, 1> &q_joints);
