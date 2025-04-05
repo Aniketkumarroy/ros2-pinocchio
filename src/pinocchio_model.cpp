@@ -18,7 +18,7 @@ public:
                   std::placeholders::_1));
 
     timer_ = this->create_wall_timer(
-        std::chrono_literals::operator""ms(500),
+        std::chrono_literals::operator""ms(timer_period_),
         std::bind(&RobotDescripionSubscriber::timer_callback, this));
   }
 
@@ -45,7 +45,10 @@ private:
     robot_dyn_.setQJoints(_joint_positions);
   }
 
-  void timer_callback() { std::cout << "working\n"; }
+  void timer_callback() {
+    robot_dyn_.applyForwardKinematics();
+    robot_dyn_.updateTransform();
+  }
 
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr robot_des_sub_;
   rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr
@@ -53,6 +56,7 @@ private:
   rclcpp::TimerBase::SharedPtr timer_;
   const std::string robot_des_topic_ = "/robot_description";
   const std::string joint_states_topic_ = "/joint_states";
+  const uint32_t timer_period_ = 500; // ms
 
   Sthira::Sthira robot_dyn_;
 };

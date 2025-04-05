@@ -42,6 +42,8 @@ public:
   void applyForwardKinematics(
       const Eigen::Matrix<Scalar, Eigen::Dynamic, 1> &q_joints);
 
+  void applyForwardKinematics() { applyForwardKinematics(this->q_joints_); }
+
   void updateTransform();
 
   void
@@ -68,7 +70,6 @@ private:
   pinocchio::GeometryData visual_data_;
   pinocchio::GeometryData collision_data_;
 
-  std::unordered_map<std::string, Scalar> joint_position_map_;
   std::unordered_map<pinocchio::JointIndex,
                      Eigen::Transform<Scalar, 3, Eigen::Isometry>>
       joint_transform_map_;

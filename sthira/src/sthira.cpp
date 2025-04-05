@@ -72,9 +72,8 @@ void Sthira::applyForwardKinematics(
   pinocchio::updateGeometryPlacements(model_, model_data_, visual_model_,
                                       visual_data_);
 
-  updateTransform();
   std::cout << "[RobotDescripionSubscriber::forwardKinematics] "
-               "sucessfully did forward kinematic and updated transform"
+               "sucessfully did forward kinematic"
             << "\n";
 }
 
@@ -99,6 +98,10 @@ void Sthira::updateTransform() {
     frame_transform_map_[i].linear() = _frame_transform.rotation();
     frame_transform_map_[i].translation() = _frame_transform.translation();
   }
+
+  std::cout << "[RobotDescripionSubscriber::forwardKinematics] "
+               "sucessfully updated frames and joints transform"
+            << "\n";
 }
 
 void Sthira::setQJoints(
