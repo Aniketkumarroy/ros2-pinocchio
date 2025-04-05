@@ -208,6 +208,49 @@ private:
     }
   }
 
+  void
+  computeJointJacobian(const Eigen::Matrix<Scalar, Eigen::Dynamic, 1> &q_joints,
+                       const pinocchio::JointIndex joint_id,
+                       pinocchio::Data::Matrix6x &J) {
+    if (is_loaded_ == false || model_.njoints <= 1) {
+      RCLCPP_INFO(this->get_logger(),
+                  "[RobotDescripionSubscriber::updateTransform] model is not "
+                  "loaded, no of joints is %d",
+                  model_.njoints);
+      return;
+    }
+    if (joint_id >= static_cast<uint32_t>(model_.njoints)) {
+      RCLCPP_ERROR(this->get_logger(),
+                   "[RobotDescripionSubscriber::computeJointJacobian] joint_id "
+                   "%d is out ob bounds of no of joints in model",
+                   model_.njoints);
+      return;
+    }
+    pinocchio::computeJointJacobian(model_, model_data_, q_joints, joint_id, J);
+  }
+
+  void
+  computeFrameJacobian(const Eigen::Matrix<Scalar, Eigen::Dynamic, 1> &q_joints,
+                       const pinocchio::FrameIndex frame_id,
+                       pinocchio::Data::Matrix6x &J) {
+    if (is_loaded_ == false || model_.njoints <= 1) {
+      RCLCPP_INFO(this->get_logger(),
+                  "[RobotDescripionSubscriber::updateTransform] model is not "
+                  "loaded, no of joints is %d",
+                  model_.njoints);
+      return;
+    }
+
+    if (frame_id >= static_cast<uint32_t>(model_.nframes)) {
+      RCLCPP_ERROR(this->get_logger(),
+                   "[RobotDescripionSubscriber::computeFrameJacobian] frame_id "
+                   "%d is out ob bounds of no of frames in model",
+                   model_.nframes);
+      return;
+    }
+    pinocchio::computeFrameJacobian(model_, model_data_, q_joints, frame_id, J);
+  }
+
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr robot_des_sub_;
   rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr
       joint_state_sub_;
