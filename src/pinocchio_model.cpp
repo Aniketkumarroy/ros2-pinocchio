@@ -3,8 +3,8 @@
 #include "ament_index_cpp/get_package_share_directory.hpp"
 #include "pinocchio/algorithm/frames.hpp"
 #include "pinocchio/algorithm/geometry.hpp"
-#include "pinocchio/algorithm/jacobian.hpp"
-#include "pinocchio/algorithm/joint-configuration.hpp"
+#include "<pinocchio/algorithm/jacobian.hpp>"
+#include "<pinocchio/algorithm/joint-configuration.hpp>"
 // #include "pinocchio/collision/broadphase.hpp"
 #include <map>
 #include <pinocchio/parsers/srdf.hpp>
@@ -46,10 +46,13 @@ private:
 
     pinocchio::urdf::buildGeom(model_, _xml_stream, pinocchio::VISUAL,
                                visual_model_);
+
+    collision_model_.addAllCollisionPairs();
     RCLCPP_INFO(this->get_logger(),
                 "RobotDescripionSubscriber::loadPinocchioModelFromXML "
                 "Pinocchio collision model loaded sucessfully");
 
+    initializeModelData();
     findJointIds();
   }
 
@@ -68,18 +71,33 @@ private:
       joint_id_map_[model_.names[i]] = i;
     }
   }
+
+  void initializeModelData() {
+    model_data_ = pinocchio::Data(model_);
+    visual_data_ = pinocchio::GeometryData(visual_model_);
+    collision_data_ = pinocchio::GeometryData(collision_model_);
+
+    RCLCPP_INFO(this->get_logger(),
+                "RobotDescripionSubscriber::initializeModelData "
+                "Pinocchio model data initialized sucessfully");
+  }
+
   void robotDescSubs(const std_msgs::msg::String &msg) {
     if (!is_loaded_) {
       loadPinocchioModelFromXML(msg);
-      collision_model_.addAllCollisionPairs();
       is_loaded_ = true;
     }
   }
+
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr robot_des_topic_;
   bool is_loaded_ = false;
   pinocchio::Model model_;
   pinocchio::GeometryModel visual_model_;
   pinocchio::GeometryModel collision_model_;
+
+  pinocchio::Data model_data_;
+  pinocchio::GeometryData visual_data_;
+  pinocchio::GeometryData collision_data_;
 
   std::map<std::string, pinocchio::JointIndex> joint_id_map_;
 };
