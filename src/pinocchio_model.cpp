@@ -33,14 +33,14 @@ public:
   }
 
 private:
-  void loadPinocchioModelFromXML(const std_msgs::msg::String &msg) {
-    pinocchio::urdf::buildModelFromXML(msg.data, model_);
+  void loadPinocchioModelFromXML(const std::string &xml_stream) {
+    pinocchio::urdf::buildModelFromXML(xml_stream, model_);
     RCLCPP_INFO(this->get_logger(),
                 "[RobotDescripionSubscriber::loadPinocchioModelFromXML] "
                 "Pinocchio model loaded with %d joints.",
                 model_.njoints);
 
-    std::istringstream _xml_stream(msg.data.c_str());
+    std::istringstream _xml_stream(xml_stream.c_str());
     if (_xml_stream.str().empty()) {
       const std::string exception_message(
           "error while converting std_msgs::msg::String to std::istringstream");
@@ -63,23 +63,6 @@ private:
     is_loaded_ = true;
 
     initializeModelData();
-    findJointIds();
-  }
-
-  void findJointIds() {
-    if (is_loaded_ == false || model_.njoints <= 1) {
-      RCLCPP_INFO(this->get_logger(),
-                  "[RobotDescripionSubscriber::findJointIds] model is not "
-                  "loaded, no of joints is %d",
-                  model_.njoints);
-      return;
-    }
-    joint_id_map_.clear();
-    pinocchio::JointIndex _n_joints = model_.njoints;
-    for (pinocchio::JointIndex i = 1; i < _n_joints; ++i) { // 0 universe
-      std::cout << "Joint[" << i << "] : " << model_.names[i] << std::endl;
-      joint_id_map_[model_.names[i]] = i;
-    }
   }
 
   void initializeModelData() {
@@ -135,14 +118,14 @@ private:
     pinocchio::JointIndex _n_joints = model_.njoints;
     for (pinocchio::JointIndex i = 1; i < _n_joints; ++i) {
       pinocchio::SE3 _joint_transform = model_data_.oMi[i];
-      joints_transform_[i].linear() = _joint_transform.rotation();
-      joints_transform_[i].translation() = _joint_transform.translation();
+      joints_transform_map_[i].linear() = _joint_transform.rotation();
+      joints_transform_map_[i].translation() = _joint_transform.translation();
     }
   }
 
   void robotDescSubCallback(const std_msgs::msg::String &msg) {
     if (!is_loaded_) {
-      loadPinocchioModelFromXML(msg);
+      loadPinocchioModelFromXML(msg.data);
     }
   }
 
@@ -154,6 +137,11 @@ private:
                   model_.njoints);
       return;
     }
+    uint32_t _n_joints = msg.name.size();
+    for (uint32_t i = 0; i < _n_joints; i++) {
+      joint_position_map_[msg.name[i]] = msg.position[i];
+    }
+  }
 
     uint32_t _n_joints = msg.name.size();
     assert(_n_joints == joint_id_map_.size());
@@ -172,8 +160,6 @@ private:
       // -1 since in pinocchio 0 is universe
       _q_joints[_it->second - 1] = msg.position[i];
     }
-
-    forwardKinematics(_q_joints);
   }
 
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr robot_des_sub_;
