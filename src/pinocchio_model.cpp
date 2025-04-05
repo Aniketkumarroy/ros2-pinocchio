@@ -18,222 +18,26 @@ public:
   }
 
 private:
-  void loadPinocchioModelFromXML(const std::string &xml_stream) {
-    pinocchio::urdf::buildModelFromXML(xml_stream, model_);
-    RCLCPP_INFO(this->get_logger(),
-                "[RobotDescripionSubscriber::loadPinocchioModelFromXML] "
-                "Pinocchio model loaded with %d joints.",
-                model_.njoints);
-
-    std::istringstream _xml_stream(xml_stream.c_str());
-    if (_xml_stream.str().empty()) {
-      const std::string exception_message(
-          "error while converting std_msgs::msg::String to std::istringstream");
-      throw std::invalid_argument(exception_message);
-    }
-
-    pinocchio::urdf::buildGeom(model_, _xml_stream, pinocchio::COLLISION,
-                               collision_model_);
-
-    _xml_stream.clear();
-    _xml_stream.seekg(0, std::ios::beg);
-
-    pinocchio::urdf::buildGeom(model_, _xml_stream, pinocchio::VISUAL,
-                               visual_model_);
-
-    collision_model_.addAllCollisionPairs();
-    RCLCPP_INFO(this->get_logger(),
-                "[RobotDescripionSubscriber::loadPinocchioModelFromXML] "
-                "Pinocchio collision model loaded sucessfully");
-    is_loaded_ = true;
-
-    q_joints_.setZero(model_.nq);
-
-    initializeModelData();
-  }
-
-  void initializeModelData() {
-    if (is_loaded_ == false || model_.njoints <= 1) {
-      RCLCPP_INFO(
-          this->get_logger(),
-          "[RobotDescripionSubscriber::initializeModelData] model is not "
-          "loaded, no of joints is %d",
-          model_.njoints);
-      return;
-    }
-
-    model_data_ = pinocchio::Data(model_);
-    visual_data_ = pinocchio::GeometryData(visual_model_);
-    collision_data_ = pinocchio::GeometryData(collision_model_);
-
-    RCLCPP_INFO(this->get_logger(),
-                "[RobotDescripionSubscriber::initializeModelData] "
-                "Pinocchio model data initialized sucessfully");
-  }
-
-  void
-  forwardKinematics(const Eigen::Matrix<Scalar, Eigen::Dynamic, 1> &q_joints) {
-
-    if (is_loaded_ == false || model_.njoints <= 1) {
-      RCLCPP_INFO(this->get_logger(),
-                  "[RobotDescripionSubscriber::forwardKinematics] model is not "
-                  "loaded, no of joints is %d",
-                  model_.njoints);
-      return;
-    }
-
-    pinocchio::forwardKinematics(model_, model_data_, q_joints);
-    pinocchio::updateFramePlacements(model_, model_data_);
-    pinocchio::updateGeometryPlacements(model_, model_data_, collision_model_,
-                                        collision_data_);
-    pinocchio::updateGeometryPlacements(model_, model_data_, visual_model_,
-                                        visual_data_);
-
-    updateTransform();
-    RCLCPP_INFO(this->get_logger(),
-                "[RobotDescripionSubscriber::forwardKinematics] "
-                "sucessfully did forward kinematic and updated transform");
-  }
-
-  void updateTransform() {
-
-    if (is_loaded_ == false || model_.njoints <= 1) {
-      RCLCPP_INFO(this->get_logger(),
-                  "[RobotDescripionSubscriber::updateTransform] model is not "
-                  "loaded, no of joints is %d",
-                  model_.njoints);
-      return;
-    }
-
-    pinocchio::JointIndex _n_joints = model_.njoints;
-    for (pinocchio::JointIndex i = 1; i < _n_joints; ++i) {
-      pinocchio::SE3 _joint_transform = model_data_.oMi[i];
-      joints_transform_map_[i].linear() = _joint_transform.rotation();
-      joints_transform_map_[i].translation() = _joint_transform.translation();
-    }
-
-    uint32_t _n_frames = model_.nframes;
-    for (pinocchio::FrameIndex i = 1; i < _n_frames; ++i) {
-      const pinocchio::SE3 &_frame_transform = model_data_.oMf[i];
-      frame_transform_map_[i].linear() = _frame_transform.rotation();
-      frame_transform_map_[i].translation() = _frame_transform.translation();
-    }
-  }
-
   void robotDescSubCallback(const std_msgs::msg::String &msg) {
-    if (!is_loaded_) {
-      loadPinocchioModelFromXML(msg.data);
+    if (!robot_dyn_.isModelLoaded()) {
+      robot_dyn_.loadPinocchioModelFromXML(msg.data);
     }
   }
 
   void jointStateSubCallback(const sensor_msgs::msg::JointState &msg) {
-    if (is_loaded_ == false || model_.njoints <= 1) {
+    if (!robot_dyn_.isModelLoaded()) {
       RCLCPP_INFO(this->get_logger(),
                   "[RobotDescripionSubscriber::jointStateSubCallback] model is "
                   "not loaded, no of joints is %d",
-                  model_.njoints);
+                  robot_dyn_.getNumOfJoints());
       return;
     }
     uint32_t _n_joints = msg.name.size();
+    std::unordered_map<std::string, Sthira::Scalar> _joint_positions;
     for (uint32_t i = 0; i < _n_joints; i++) {
-      joint_position_map_[msg.name[i]] = msg.position[i];
+      _joint_positions[msg.name[i]] = msg.position[i];
     }
-    updateQJoints();
-    forwardKinematics(this->q_joints_);
-  }
-
-  void updateQJoints() {
-    if (is_loaded_ == false || model_.njoints <= 1) {
-      RCLCPP_INFO(this->get_logger(),
-                  "[RobotDescripionSubscriber::jointStateSubCallback] model is "
-                  "not loaded, no of joints is %d",
-                  model_.njoints);
-      return;
-    }
-    if (static_cast<uint32_t>(model_.njoints - 1) !=
-        static_cast<uint32_t>(joint_position_map_.size())) {
-      RCLCPP_ERROR(
-          this->get_logger(),
-          "[RobotDescripionSubscriber::jointStateSubCallback] Mismatch "
-          "in joint counts: model_.njoints - 1 (%d) != "
-          "joint_position_map size (%ld)",
-          model_.njoints - 1, joint_position_map_.size());
-      return;
-    }
-    uint32_t _n_joints = model_.njoints;
-    for (pinocchio::JointIndex i = 1; i < _n_joints; ++i) {
-      const auto &_joint = model_.joints[i];
-      const std::string &_joint_name = model_.names[i];
-
-      const auto _it = joint_position_map_.find(_joint_name);
-      if (_it == joint_position_map_.end()) {
-        RCLCPP_WARN(this->get_logger(),
-                    "Joint %s not found in joint_position_map_",
-                    _joint_name.c_str());
-        return;
-      }
-      auto idx_q = _joint.idx_q(); // Where to insert in q
-      auto nq = _joint.nq();       // How many entries for this joint
-
-      switch (nq) {
-      case 1:
-        q_joints_[idx_q + 0] = _it->second;
-        break;
-
-      case 2:
-        q_joints_[idx_q + 0] = std::cos(_it->second / 2.0);
-        q_joints_[idx_q + 1] = std::sin(_it->second / 2.0);
-        break;
-      default:
-        RCLCPP_WARN(this->get_logger(),
-                    "Joint %s has unsupported nq = %d; skipping",
-                    _joint_name.c_str(), nq);
-        break;
-      }
-    }
-  }
-
-  void
-  computeJointJacobian(const Eigen::Matrix<Scalar, Eigen::Dynamic, 1> &q_joints,
-                       const pinocchio::JointIndex joint_id,
-                       pinocchio::Data::Matrix6x &J) {
-    if (is_loaded_ == false || model_.njoints <= 1) {
-      RCLCPP_INFO(this->get_logger(),
-                  "[RobotDescripionSubscriber::updateTransform] model is not "
-                  "loaded, no of joints is %d",
-                  model_.njoints);
-      return;
-    }
-    if (joint_id >= static_cast<uint32_t>(model_.njoints)) {
-      RCLCPP_ERROR(this->get_logger(),
-                   "[RobotDescripionSubscriber::computeJointJacobian] joint_id "
-                   "%d is out ob bounds of no of joints in model",
-                   model_.njoints);
-      return;
-    }
-    pinocchio::computeJointJacobian(model_, model_data_, q_joints, joint_id, J);
-  }
-
-  void
-  computeFrameJacobian(const Eigen::Matrix<Scalar, Eigen::Dynamic, 1> &q_joints,
-                       const pinocchio::FrameIndex frame_id,
-                       pinocchio::Data::Matrix6x &J) {
-    if (is_loaded_ == false || model_.njoints <= 1) {
-      RCLCPP_INFO(this->get_logger(),
-                  "[RobotDescripionSubscriber::updateTransform] model is not "
-                  "loaded, no of joints is %d",
-                  model_.njoints);
-      return;
-    }
-
-    if (frame_id >= static_cast<uint32_t>(model_.nframes)) {
-      RCLCPP_ERROR(this->get_logger(),
-                   "[RobotDescripionSubscriber::computeFrameJacobian] frame_id "
-                   "%d is out ob bounds of no of frames in model",
-                   model_.nframes);
-      return;
-    }
-    pinocchio::computeFrameJacobian(model_, model_data_, q_joints, frame_id, J);
+    robot_dyn_.setQJoints(_joint_positions);
   }
 
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr robot_des_sub_;
