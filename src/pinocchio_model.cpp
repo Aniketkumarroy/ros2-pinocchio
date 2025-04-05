@@ -6,8 +6,9 @@
 #include "pinocchio/algorithm/jacobian.hpp"
 #include "pinocchio/algorithm/joint-configuration.hpp"
 // #include "pinocchio/collision/broadphase.hpp"
-#include "pinocchio/parsers/srdf.hpp"
-#include "pinocchio/parsers/urdf.hpp"
+#include <map>
+#include <pinocchio/parsers/srdf.hpp>
+#include <pinocchio/parsers/urdf.hpp>
 
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/string.hpp"
@@ -27,6 +28,22 @@ private:
                                visual_model_);
     pinocchio::urdf::buildGeom(model_, msg.data, pinocchio::COLLISION,
                                collision_model_);
+    findJointIds();
+  }
+
+  void findJointIds() {
+    if (model_.njoints == 0) {
+      RCLCPP_INFO(this->get_logger(),
+                  "RobotDescripionSubscriber::findJointIds model is not "
+                  "loaded, no of joints is %d",
+                  model_.njoints);
+      return;
+    }
+    joint_id_map_.clear();
+    for (pinocchio::JointIndex i = 1; i < model_.njoints; ++i) { // 0 universe
+      std::cout << "Joint[" << i << "] : " << model_.names[i] << std::endl;
+      joint_id_map_[model_.names[i]] = i;
+    }
   }
   void robotDescSubs(const std_msgs::msg::String &msg) {
     if (!is_loaded_) {
@@ -40,6 +57,8 @@ private:
   pinocchio::Model model_;
   pinocchio::GeometryModel visual_model_;
   pinocchio::GeometryModel collision_model_;
+
+  std::map<std::string, pinocchio::JointIndex> joint_id_map_;
 };
 
 int main(int argc, char *argv[]) {
