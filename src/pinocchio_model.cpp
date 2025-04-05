@@ -62,6 +62,8 @@ private:
                 "Pinocchio collision model loaded sucessfully");
     is_loaded_ = true;
 
+    q_joints_.setZero(model_.nq);
+
     initializeModelData();
   }
 
@@ -151,10 +153,11 @@ private:
     for (uint32_t i = 0; i < _n_joints; i++) {
       joint_position_map_[msg.name[i]] = msg.position[i];
     }
-    applyFKFromJointPosition();
+    updateQJoints();
+    forwardKinematics(this->q_joints_);
   }
 
-  void applyFKFromJointPosition() {
+  void updateQJoints() {
     if (is_loaded_ == false || model_.njoints <= 1) {
       RCLCPP_INFO(this->get_logger(),
                   "[RobotDescripionSubscriber::jointStateSubCallback] model is "
@@ -172,9 +175,6 @@ private:
           model_.njoints - 1, joint_position_map_.size());
       return;
     }
-
-    Eigen::Matrix<Scalar, Eigen::Dynamic, 1> _q_joints;
-    _q_joints.setZero(model_.nq);
     uint32_t _n_joints = model_.njoints;
     for (pinocchio::JointIndex i = 1; i < _n_joints; ++i) {
       const auto &_joint = model_.joints[i];
@@ -192,12 +192,12 @@ private:
 
       switch (nq) {
       case 1:
-        _q_joints[idx_q + 0] = _it->second;
+        q_joints_[idx_q + 0] = _it->second;
         break;
 
       case 2:
-        _q_joints[idx_q + 0] = std::cos(_it->second / 2.0);
-        _q_joints[idx_q + 1] = std::sin(_it->second / 2.0);
+        q_joints_[idx_q + 0] = std::cos(_it->second / 2.0);
+        q_joints_[idx_q + 1] = std::sin(_it->second / 2.0);
         break;
       default:
         RCLCPP_WARN(this->get_logger(),
@@ -206,7 +206,6 @@ private:
         break;
       }
     }
-    forwardKinematics(_q_joints);
   }
 
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr robot_des_sub_;
@@ -228,6 +227,8 @@ private:
   std::unordered_map<pinocchio::FrameIndex,
                      Eigen::Transform<Scalar, 3, Eigen::Isometry>>
       frame_transform_map_;
+
+  Eigen::Matrix<Scalar, Eigen::Dynamic, 1> q_joints_;
 };
 
 int main(int argc, char *argv[]) {
