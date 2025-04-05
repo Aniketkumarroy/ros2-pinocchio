@@ -10,8 +10,10 @@
 #include <pinocchio/parsers/srdf.hpp>
 #include <pinocchio/parsers/urdf.hpp>
 
-#include "rclcpp/rclcpp.hpp"
-#include "std_msgs/msg/string.hpp"
+#include <rclcpp/rclcpp.hpp>
+#include <std_msgs/msg/string.hpp>
+#include <string>
+
 class RobotDescripionSubscriber : public rclcpp::Node {
 public:
   RobotDescripionSubscriber() : Node("robot_description_subscriber") {
@@ -24,10 +26,30 @@ public:
 private:
   void loadPinocchioModelFromXML(const std_msgs::msg::String &msg) {
     pinocchio::urdf::buildModelFromXML(msg.data, model_);
-    pinocchio::urdf::buildGeom(model_, msg.data, pinocchio::VISUAL,
-                               visual_model_);
-    pinocchio::urdf::buildGeom(model_, msg.data, pinocchio::COLLISION,
+    RCLCPP_INFO(this->get_logger(),
+                "RobotDescripionSubscriber::loadPinocchioModelFromXML "
+                "Pinocchio model loaded with %d joints.",
+                model_.njoints);
+
+    std::istringstream _xml_stream(msg.data.c_str());
+    if (_xml_stream.str().empty()) {
+      const std::string exception_message(
+          "error while converting std_msgs::msg::String to std::istringstream");
+      throw std::invalid_argument(exception_message);
+    }
+
+    pinocchio::urdf::buildGeom(model_, _xml_stream, pinocchio::COLLISION,
                                collision_model_);
+
+    _xml_stream.clear();
+    _xml_stream.seekg(0, std::ios::beg);
+
+    pinocchio::urdf::buildGeom(model_, _xml_stream, pinocchio::VISUAL,
+                               visual_model_);
+    RCLCPP_INFO(this->get_logger(),
+                "RobotDescripionSubscriber::loadPinocchioModelFromXML "
+                "Pinocchio collision model loaded sucessfully");
+
     findJointIds();
   }
 
