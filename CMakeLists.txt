@@ -17,6 +17,8 @@ find_package(sensor_msgs REQUIRED)
 find_package(pinocchio REQUIRED)
 find_package(Eigen3 REQUIRED)
 
+add_subdirectory(sthira)
+
 include_directories(${EIGEN3_INCLUDE_DIR})
 
 add_executable(cpp_pub src/cpp_publisher.cpp)
@@ -26,6 +28,7 @@ ament_target_dependencies(cpp_sub rclcpp std_msgs)
 
 add_executable(pinocchio_model src/pinocchio_model.cpp)
 ament_target_dependencies(pinocchio_model pinocchio rclcpp std_msgs sensor_msgs)
+target_link_libraries(pinocchio_model sthira)
 
 install(TARGETS
   cpp_pub
