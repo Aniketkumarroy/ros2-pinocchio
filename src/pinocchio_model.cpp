@@ -1,4 +1,5 @@
 #include "sthira.h"
+#include <chrono>
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/joint_state.hpp>
 #include <std_msgs/msg/string.hpp>
@@ -15,6 +16,10 @@ public:
         joint_states_topic_, 10,
         std::bind(&RobotDescripionSubscriber::jointStateSubCallback, this,
                   std::placeholders::_1));
+
+    timer_ = this->create_wall_timer(
+        std::chrono_literals::operator""ms(500),
+        std::bind(&RobotDescripionSubscriber::timer_callback, this));
   }
 
 private:
@@ -40,9 +45,12 @@ private:
     robot_dyn_.setQJoints(_joint_positions);
   }
 
+  void timer_callback() { std::cout << "working\n"; }
+
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr robot_des_sub_;
   rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr
       joint_state_sub_;
+  rclcpp::TimerBase::SharedPtr timer_;
   const std::string robot_des_topic_ = "/robot_description";
   const std::string joint_states_topic_ = "/joint_states";
 
