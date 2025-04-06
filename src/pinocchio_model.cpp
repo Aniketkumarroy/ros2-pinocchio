@@ -38,7 +38,7 @@ private:
       return;
     }
     uint32_t _n_joints = msg.name.size();
-    std::unordered_map<std::string, Sthira::Scalar> _joint_positions;
+    std::unordered_map<std::string, sthira::Scalar> _joint_positions;
     for (uint32_t i = 0; i < _n_joints; i++) {
       _joint_positions[msg.name[i]] = msg.position[i];
     }
@@ -54,7 +54,7 @@ private:
     //     Eigen::Matrix<double, 6, Eigen::Dynamic, Eigen::ColMajor>::Zero(
     //         6, robot_dyn_.getNumOfDOF());
     // for (uint32_t i = 1; i < _n_frames; i++) {
-    //   robot_dyn_.computeJacobian(i, J, Sthira::Sthira::FRAME);
+    //   robot_dyn_.computeJacobian(i, J, sthira::Sthira::FRAME);
     // }
 
     robot_dyn_.computeCollisions();
@@ -68,7 +68,7 @@ private:
   const std::string joint_states_topic_ = "/joint_states";
   const uint32_t timer_period_ = 500; // ms
 
-  Sthira::Sthira robot_dyn_;
+  sthira::Sthira robot_dyn_;
 };
 
 int main(int argc, char *argv[]) {

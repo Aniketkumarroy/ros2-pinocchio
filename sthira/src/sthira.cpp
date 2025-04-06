@@ -1,6 +1,6 @@
 #include "sthira.h"
 
-namespace Sthira {
+namespace sthira {
 
 void Sthira::loadPinocchioModelFromXML(const std::string &xml_stream) {
 
@@ -275,4 +275,4 @@ bool Sthira::areColliding(const std::string &frame_1,
   return collision;
 }
 
-} // namespace Sthira
+} // namespace sthira

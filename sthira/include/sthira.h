@@ -9,7 +9,7 @@
 
 #include <iostream>
 
-namespace Sthira {
+namespace sthira {
 
 using Scalar = double; // if we switch it to other type then we might need to
 // adjust datatype of pinocchio accordingly
@@ -95,4 +95,4 @@ private:
   Eigen::Matrix<Scalar, Eigen::Dynamic, 1> q_joints_;
 };
 
-} // namespace Sthira
+} // namespace sthira
