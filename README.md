@@ -5,7 +5,7 @@
 
 **Sthira** is a tool designed to evaluate and visualize a robot’s payload capabilities based on its kinematic and dynamic structure. it is built on top of [Pinocchio](https://github.com/stack-of-tasks/pinocchio), a state-of-the-art Rigid Body Algorithms for poly-articulated systems. Whether you’re designing manipulators, mobile robots, or humanoids — Sthira helps you understand **how much your robot can carry**, **where**, and **at what cost** (torque, power, stiffness).
 
-> 🧠 Sthira is derived from word "Sthirá " meaning **firm, stable**, this tool empowers roboticists to design smarter, stronger systems.
+> 🧠 Sthira is derived from word "*Sthirá* " meaning **firm, stable**, this tool empowers roboticists to design smarter, stronger systems.
 
 ---
 
@@ -42,5 +42,10 @@ to install ros2 humble in your machine head on to [ros2-humble](https://docs.ros
 ```bash
 chmod +x ros_humble_install.sh
 ./ros_humble_install.sh
+```
+* ## 🧍‍♂️ Pinocchio
+to install pinocchio run
+```bash
+sudo apt install ros-humble-pinocchio
 ```
 
