@@ -5,7 +5,7 @@ namespace sthira {
 void Sthira::loadPinocchioModelFromXML(const std::string &xml_stream) {
 
   pinocchio::urdf::buildModelFromXML(xml_stream, model_);
-  std::cout << "[RobotDescripionSubscriber::loadPinocchioModelFromXML] "
+  std::cout << "[Sthira::loadPinocchioModelFromXML] "
                "Pinocchio model loaded with "
             << model_.njoints << " joints." << "\n";
 
@@ -28,7 +28,7 @@ void Sthira::loadPinocchioModelFromXML(const std::string &xml_stream) {
   collision_model_.addAllCollisionPairs();
   removeAdjacentCollisionPairs();
 
-  std::cout << "[RobotDescripionSubscriber::loadPinocchioModelFromXML] "
+  std::cout << "[Sthira::loadPinocchioModelFromXML] "
                "Pinocchio collision model loaded sucessfully"
             << "\n";
   is_loaded_ = true;
@@ -43,17 +43,16 @@ void Sthira::loadPinocchioModelFromXML(const std::string &xml_stream) {
 
 void Sthira::initializeModelData() {
   if (is_loaded_ == false || model_.njoints <= 1) {
-    std::cout
-        << "[RobotDescripionSubscriber::initializeModelData] model is not "
-           "loaded, no of joints is "
-        << model_.njoints << "\n";
+    std::cout << "[Sthira::initializeModelData] model is not "
+                 "loaded, no of joints is "
+              << model_.njoints << "\n";
     return;
   }
   model_data_ = pinocchio::Data(model_);
   visual_data_ = pinocchio::GeometryData(visual_model_);
   collision_data_ = pinocchio::GeometryData(collision_model_);
 
-  std::cout << "[RobotDescripionSubscriber::initializeModelData] "
+  std::cout << "[Sthira::initializeModelData] "
                "Pinocchio model data initialized sucessfully"
             << "\n";
 }
@@ -61,7 +60,7 @@ void Sthira::initializeModelData() {
 void Sthira::applyForwardKinematics(
     const Eigen::Matrix<Scalar, Eigen::Dynamic, 1> &q_joints) {
   if (is_loaded_ == false || model_.njoints <= 1) {
-    std::cout << "[RobotDescripionSubscriber::forwardKinematics] model is not "
+    std::cout << "[Sthira::applyForwardKinematics] model is not "
                  "loaded, no of joints is "
               << model_.njoints << "\n";
     return;
@@ -74,14 +73,14 @@ void Sthira::applyForwardKinematics(
   pinocchio::updateGeometryPlacements(model_, model_data_, visual_model_,
                                       visual_data_);
 
-  std::cout << "[RobotDescripionSubscriber::forwardKinematics] "
+  std::cout << "[Sthira::applyForwardKinematics] "
                "sucessfully did forward kinematic"
             << "\n";
 }
 
 void Sthira::updateTransform() {
   if (is_loaded_ == false || model_.njoints <= 1) {
-    std::cout << "[RobotDescripionSubscriber::updateTransform] model is not "
+    std::cout << "[Sthira::updateTransform] model is not "
                  "loaded, no of joints is "
               << model_.njoints << "\n";
     return;
@@ -101,7 +100,7 @@ void Sthira::updateTransform() {
     frame_transform_map_[i].translation() = _frame_transform.translation();
   }
 
-  std::cout << "[RobotDescripionSubscriber::forwardKinematics] "
+  std::cout << "[Sthira::updateTransform] "
                "sucessfully updated frames and joints transform"
             << "\n";
 }
@@ -109,14 +108,14 @@ void Sthira::updateTransform() {
 void Sthira::setQJoints(
     const std::unordered_map<std::string, Scalar> &joint_positions) {
   if (is_loaded_ == false || model_.njoints <= 1) {
-    std::cout << "[RobotDescripionSubscriber::jointStateSubCallback] model is "
+    std::cout << "[Sthira::setQJoints] model is "
                  "not loaded, no of joints is "
               << model_.njoints << "\n";
     return;
   }
   if (static_cast<uint32_t>(model_.njoints - 1) !=
       static_cast<uint32_t>(joint_positions.size())) {
-    std::cout << "[RobotDescripionSubscriber::jointStateSubCallback] Mismatch "
+    std::cout << "[Sthira::setQJoints] Mismatch "
                  "in joint counts: model_.njoints - 1 ("
               << model_.njoints - 1
               << ") != "
@@ -132,8 +131,8 @@ void Sthira::setQJoints(
 
     const auto _it = joint_positions.find(_joint_name);
     if (_it == joint_positions.end()) {
-      std::cout << "Joint" << _joint_name << " not found in joint_positions"
-                << "\n";
+      std::cout << "[Sthira::setQJoints] Joint" << _joint_name
+                << " not found in joint_positions" << "\n";
       return;
     }
     auto idx_q = _joint.idx_q(); // Where to insert in q
@@ -149,8 +148,8 @@ void Sthira::setQJoints(
       q_joints_[idx_q + 1] = std::sin(_it->second / 2.0);
       break;
     default:
-      std::cout << "Joint " << _joint_name << " has unsupported nq = " << nq
-                << "; skipping" << "\n";
+      std::cout << "[Sthira::setQJoints] Joint " << _joint_name
+                << " has unsupported nq = " << nq << "; skipping" << "\n";
       break;
     }
   }
@@ -160,7 +159,7 @@ void Sthira::computeJacobian(
     const Eigen::Matrix<Scalar, Eigen::Dynamic, 1> &q_joints,
     const uint32_t index, pinocchio::Data::Matrix6x &J, const Sthira::Type m) {
   if (is_loaded_ == false || model_.njoints <= 1) {
-    std::cout << "[RobotDescripionSubscriber::updateTransform] model is not "
+    std::cout << "[Sthira::computeJacobian] model is not "
                  "loaded, no of joints is "
               << model_.njoints << "\n";
     return;
@@ -171,14 +170,15 @@ void Sthira::computeJacobian(
   else if (m == Sthira::JOINT)
     _N = static_cast<uint32_t>(model_.njoints);
   else {
-    std::cout << "wrong value for m provided, possible values are "
+    std::cout << "[Sthira::computeJacobian] wrong value for m provided, "
+                 "possible values are "
                  "Sthira::FRAME or Sthira::JOINT"
               << "\n";
     return;
   }
   if (index >= _N) {
-    std::cout << "[RobotDescripionSubscriber::computeJointJacobian] index "
-              << index << " is out of bounds" << "\n";
+    std::cout << "[Sthira::computeJacobian] index " << index
+              << " is out of bounds" << "\n";
     return;
   }
   if (m == Sthira::FRAME)
@@ -198,7 +198,8 @@ void Sthira::removeAdjacentCollisionPairs() {
     pinocchio::JointIndex _joint1 = _obj1.parentJoint;
     pinocchio::JointIndex _joint2 = _obj2.parentJoint;
 
-    if (model_.parents[_joint1] == _joint2 || model_.parents[_joint2] == _joint1) {
+    if (model_.parents[_joint1] == _joint2 ||
+        model_.parents[_joint2] == _joint1) {
       // Skip adjacent pairs
       continue;
     }
@@ -226,7 +227,8 @@ void Sthira::computeCollisions(
     if (_cr.isCollision()) {
       std::string link1 = model_.frames[_cp.first].name;
       std::string link2 = model_.frames[_cp.second].name;
-      std::cerr << "link: " << link1 << " is colliding with " << link2 << "\n";
+      std::cerr << "[Sthira::computeCollisions] link: " << link1
+                << " is colliding with " << link2 << "\n";
     }
   }
 }
