@@ -23,14 +23,14 @@
 
 ---
 
-## 📸 Example Visuals
+<!-- ## 📸 Example Visuals
 
 > _Replace with your plots or screenshots if available_
 - Heatmap of max payload across workspace
 - Torque requirements for various end-effector configurations
 - Interactive 3D plots of payload vs configuration
 
----
+--- -->
 
 
 ## 🔧 Installation
@@ -38,14 +38,96 @@
 ### 🧩 Prerequisites & Dependencies
 
 * ### 🐢 ROS 2
-to install ros2 humble in your machine head on to [ros2-humble](https://docs.ros.org/en/humble/Installation.html) and follow the steps or you can use the installation [script] to install it
+to install ros2 humble in your machine head on to [ros2-humble](https://docs.ros.org/en/humble/Installation.html) and follow the steps or you can use the installation [script](ros_humble_install.sh) to install it
 ```bash
-chmod +x ros_humble_install.sh
-./ros_humble_install.sh
+sudo chmod +x ros_humble_install.sh
+sudo ./ros_humble_install.sh
+```
+after installation add this line at the end of your `~/.bashrc` to auto source the ros environment
+```bash
+source /opt/ros/humble/setup.bash
+```
+or run this to edit your `~/.bashrc`
+```bash
+echo "source /opt/ros/humble/setup.bash" >> ~/.bashrc
+```
+> `Note`: make sure to source `setup.bash` if you are using bash and `setup.zsh` if you are using zsh, for example, if your shel is zsh then you will type
+```bash
+echo "source /opt/ros/humble/setup.zsh" >> ~/.zshrc
 ```
 * ## 🧍‍♂️ Pinocchio
 to install pinocchio run
 ```bash
 sudo apt install ros-humble-pinocchio
 ```
+## 🛠️ Building
+first create a ros workspace and navigate into it
+```bash
+mkdir ~p ~/ros2_ws/src
+cd ~/ros2_ws/src
+```
+clone the repository
+```bash
+git clone https://github.com/Aniketkumarroy/ros2-pinocchio.git
+```
+build the ros project
+```bash
+cd ~/ros2_ws
+colcon build
+```
+before using the workspace be sure to source the workspace
+```bash
+source ~/ros2_ws/install/setup.bash
+```
+> `Note`:make sure to source `setup.bash` if you are using bash and `setup.zsh` if you are using zsh
+---
+## 🗂️ Directory Structure
+```bash
+.
+├── CMakeLists.txt
+├── include
+│   └── ros2-pinocchio
+├── package.xml
+├── README.md
+├── ros_humble_install.sh
+├── scripts
+│   ├── py_publisher.py
+│   └── py_subscriber.py
+├── src
+│   ├── cpp_publisher.cpp
+│   ├── cpp_subscriber.cpp
+│   └── pinocchio_model.cpp
+└── sthira
+    ├── CMakeLists.txt
+    ├── include
+    │   └── sthira.h
+    └── src
+        └── sthira.cpp
+```
+`scripts`: contains example of a ros2 subscriber and publisher in python. you can run the subscriber/publisher by running
+```bash
+ros2 run ros2-pinocchio py_publisher.py
+```
+for publisher or
+```bash
+ros2 run ros2-pinocchio py_subscriber.py
+```
+for subscriber
 
+`src`: contains a c++ subscriber(`cpp_subscriber.cpp`) and a publisher(`cpp_publisher.cpp`). you can run them using
+```bash
+ros2 run ros2-pinocchio cpp_pub
+```
+for publisher or
+```bash
+ros2 run ros2-pinocchio cpp_sub
+```
+for subscriber
+
+here the name of the executable is different as compared to python because in case of c++ the executable name is defined in the root [CMakeList.txt](CMakeLists.txt)
+
+`sthira`: this is the library which will parse our robot_description and will do the kinematic analysis on it or detect collision.
+---
+## Example
+
+---
