@@ -63,7 +63,7 @@ sudo apt install ros-humble-pinocchio
 ## 🛠️ Building
 first create a ros workspace and navigate into it
 ```bash
-mkdir ~p ~/ros2_ws/src
+mkdir -p ~/ros2_ws/src
 cd ~/ros2_ws/src
 ```
 clone the repository
