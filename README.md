@@ -128,6 +128,44 @@ here the name of the executable is different as compared to python because in ca
 
 `sthira`: this is the library which will parse our robot_description and will do the kinematic analysis on it or detect collision.
 ---
-## Example
+## 🕹️ Example
+we will try a demo robot [TIAGo](https://github.com/pal-robotics/tiago_robot)
+clone the repository in your workspace
+```bash
+cd ~/ros2_ws/src
+git clone https://github.com/pal-robotics/tiago_robot.git
+```
+this package will need some dependencies from PAL Robotics, you can either git clone them and build them in the same ros workspace or just install the binaries
 
+to install all the dependencies run
+```bash
+sudo apt install -y ros-humble-xacro \
+    ros-humble-launch-param-builder \
+    ros-humble-launch-pal \
+    ros-humble-pal-urdf-utils \
+    ros-humble-pmb2-description \
+    ros-humble-pal-hey5-description \
+    ros-humble-pal-gripper-description
+```
+build the package
+```bash
+cd ~/ros2_ws
+colcon build
+```
+source the workspace
+```bash
+source ~/ros2_ws/install/setup.bash
+```
+> `Note`:make sure to source `setup.bash` if you are using bash and `setup.zsh` if you are using zsh
+now open a terminal and run the `pinocchio_model` node
+```bash
+ros2 run ros2-pinocchio pinocchio_model
+```
+in another terminal run launch the TIAGo robot
+```bash
+ros2 launch tiago_description show.launch.py
+```
+play with the joint controller gui to move the robot arm and see what collision happens
+
+you can go through the [pinocchio_model.cpp](src/pinocchio_model.cpp) to see what it does
 ---
