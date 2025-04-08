@@ -25,7 +25,7 @@ class MinimalPublisher : public rclcpp::Node
     {
       auto message = std_msgs::msg::String();
       message.data = "I am sending count! " + std::to_string(count_++);
-    //   RCLCPP_INFO(this->get_logger(), "Publishing: '%s'", message.data.c_str());
+      RCLCPP_INFO(this->get_logger(), "Publishing: '%s'", message.data.c_str());
       publisher_->publish(message);
     }
     rclcpp::TimerBase::SharedPtr timer_;
