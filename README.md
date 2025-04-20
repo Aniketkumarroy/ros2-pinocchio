@@ -169,3 +169,12 @@ play with the joint controller gui to move the robot arm and see what collision 
 
 you can go through the [pinocchio_model.cpp](src/pinocchio_model.cpp) to see what it does
 ---
+
+## 🧩 Miscellaneous
+youtube [video](https://youtu.be/iJdse5FIPO8) for installing ros humble
+
+youtube [video](https://youtu.be/0tMFbH3Is9k) for running ros2 publisher and subscriber
+
+youtube [video](https://youtu.be/FQ6-xSGKHmU) for running tiago robot visualization in rviz
+
+---
